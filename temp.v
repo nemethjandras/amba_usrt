@@ -17,6 +17,7 @@ wire [7:0] outData;
 wire uClk;
 reg dir; //dir<=~pWrite
 
+
 //==================================================================
 //MODULOK
 //==================================================================
@@ -108,8 +109,6 @@ module  serializer(
 )
 
 endmodule
-
-
 
 /*
 collects and stores 8 bit of data, then sends it out 
