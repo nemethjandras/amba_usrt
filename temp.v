@@ -115,13 +115,24 @@ collects and stores 8 bit of data, then sends it out
 this will be used for both the serializer and the deserializer to achive data consistency
 */
 module data_reg(
-	input ready, 	//send the data
+	input ready, 	//lock the data and send it send the data
 	input rst,	//clears the register + disables sending when active
 	input clk,
 	input [7:0] data_in,
 	output[7:0] data_out
 )
-
+	reg [7:0] temp_in;
+	
+	always@(posedge clk)
+	begin
+		if(rst)
+			temp<=0;
+		else if(ready==0)
+			temp<=data_in;
+	end
+	
+	assign data_out=temp[7:0]&ready;
+	
 endmodule
 
 
