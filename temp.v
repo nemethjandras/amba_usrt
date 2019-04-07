@@ -62,7 +62,7 @@ module state_reg(
 	output sendEn,	//data is in the data register and ready to be sent out to the AMBA (pRData)
 	output getEn,	//data is in the data register and ready to be sent out to the USRT (Rx)
 	output clkEn	//enables the baud rate generator
-	output uRst		//resets the baudrate generator and the data registers
+	output uRst	//resets the baudrate generator and the data registers
 )
 
 endmodule
@@ -117,7 +117,7 @@ this will be used for both the serializer and the deserializer to achive data co
 */
 module data_reg(
 	input ready, 	//send the data
-	input rst,		//clears the register + disables sending when active
+	input rst,	//clears the register + disables sending when active
 	input clk,
 	input [7:0] data_in,
 	output[7:0] data_out
