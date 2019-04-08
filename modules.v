@@ -80,6 +80,17 @@ module baud_gen(
 	input uRst,
 	output uClk
 )
+	reg [6:0] counter;
+	
+	always@(posedge pClk)
+	begin
+		if(uRst)
+			counter<=0;
+		else
+			counter<=counter+1;
+	end
+	
+	assign uClk=(counter==79)? 1 : 0;
 	
 endmodule
 
