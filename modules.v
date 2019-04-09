@@ -60,6 +60,9 @@ coordinates data transfer:
 -enables data transfer from the USRT to the AMBA when a package is completely deserilialised and unpacked
 -enables data transfer from the AMBA to the USRT when the data is ready in the register -> ready for serialization and encoding
 */
+
+//NOT NEEDED !!!
+/*
 module state_reg(
 	input pClk,
 	input pReset,
@@ -68,9 +71,10 @@ module state_reg(
 	output getEn,	//data is in the data register and ready to be sent out to the USRT (Rx)
 	output clkEn	//enables the baud rate generator
 	output uRst	//resets the baudrate generator and the data registers
-)
 
 endmodule
+*/
+
 
 /*
 generates 200kHz* clk for the serializer and the deserializer, and the state_reg (according to the Zilog Z844 model)
