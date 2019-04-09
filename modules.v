@@ -32,9 +32,9 @@ module enable(
 	input pReady,
 	input pSelect,
 	input pWrite,
-	output en, //usrt selected
-	output rEn, //usrt can send data to amba
-	output wEn //amba sends data to usrt
+	output en, //usrt selected >> starts the baudgenerator
+	output rEn, //usrt can send data to amba >> enables the deserializer
+	output wEn //amba sends data to usrt >> enables the serializer
 )
   
 	reg [2:0] temp; // 0:en, 1:rEn, 2:wEn
@@ -51,29 +51,6 @@ module enable(
 	assign rEn=temp[1];
 	assign wEn=temp[2];
 endmodule
-
-
-/*
-coordinates data transfer:
--resets everything if recieves reset from the bus (rReset) or pSelect, pWrite is unstable during a transfer
--starts and stops the baud generator for the USRT
--enables data transfer from the USRT to the AMBA when a package is completely deserilialised and unpacked
--enables data transfer from the AMBA to the USRT when the data is ready in the register -> ready for serialization and encoding
-*/
-
-//NOT NEEDED !!!
-/*
-module state_reg(
-	input pClk,
-	input pReset,
-	input enable, 	//USRT is selected by the AMBA
-	output sendEn,	//data is in the data register and ready to be sent out to the AMBA (pRData)
-	output getEn,	//data is in the data register and ready to be sent out to the USRT (Rx)
-	output clkEn	//enables the baud rate generator
-	output uRst	//resets the baudrate generator and the data registers
-
-endmodule
-*/
 
 
 /*
