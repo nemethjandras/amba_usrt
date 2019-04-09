@@ -43,7 +43,7 @@ module enable(
 		if(pReset==0) temp=3'b000;
 		if else(pSelect==1)
 			if(pWrite==1) temp<=3'b101;
-			else temp<=3'b011;
+			else if(pReady==1 && pEnable==1) temp<=3'b011;
 		else temp<=3'b000;
 	end
 	
