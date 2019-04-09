@@ -109,7 +109,34 @@ module deserializer(
 	input uRst,
 	output [7:0] data
 )
+
+reg [7:0] temp;
+reg [3:0] coutner;
+
+always@(posedge uClk)
+begin 
+	if(uRst)
+	begin
+	counter<=0;
+	temp<=0;
+	end
+	else if(counter==0 && Tx!=1)
+	counter<=0; //startbit check fail
+	else if(counter>0 && counter!=9)
+	temp[counter-1]<=Tx; //data bits
+	else if(counter==9 && Tx!=temp[0]^temp[1]^temp[2]^temp[3]^temp[4]^temp[5]^temp[6]^temp[7])
+	begin
+	counter<=0; //parity check fail
+	temp<=0;
+	end
+	else if(counter==10 && Tx!=0)
+	begin
+	temp<=0; //stop bit check fail
+	counter<=0;
+	end
+end
 	
+	assign data=temp;
 endmodule
 
 /*
@@ -122,6 +149,31 @@ module  serializer(
 	input uRst,
 	output Rx
 )
+reg [3:0] counter;
+reg temp;
+reg parity;
+
+ always @(posedge uClk)
+ begin
+	if(uRst
+	begin
+	counter<=0;
+	temp<=0;
+	end
+	else if(counter==0)
+	temp<=1; //startbit
+	else if(counter>0 && counter!=9)
+	temp<=data[counter-1]; //data bits
+	else if(counter==9)
+	temp<=data[0]^data[1]^data[2]^data[3]^data[4]^data[5]^data[6]^data[7]; //parity bit
+	else if(counter==10)
+	begin
+	temp<=0; //stop bit
+	counter<=0;
+	end
+ end
+ 
+ assign Rx=temp;
 
 endmodule
 
@@ -146,7 +198,7 @@ module data_reg(
 			temp<=data_in;
 	end
 	
-	assign data_out=temp[7:0]&ready;
+	assign data_out=_in;
 	
 endmodule
 
