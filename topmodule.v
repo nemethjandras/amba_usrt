@@ -1,24 +1,41 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 04/10/2019 05:53:33 PM
+// Design Name: 
+// Module Name: topmodule
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 //==================================================================
 //INPUTS + OUTPUTS
 //==================================================================
-
-
 //AMBA side
-reg [7:0] pWData; 
-reg [7:0] pRData;
-reg pWrite;
-reg pSelect;
-wire pEnable;
-wire pClk;
-reg pReset;
-reg [32:0] pAddress;
-reg pReady;
-assign pslverr = 0;
+module topmodule(
+input [7:0] pWData,
+input [7:0] pRData,
+input pWrite,
+input pSelect,
+input pEnable,
+input  pClk,
+input pReset,
+input [32:0] pAddress,
+input pReady,
+input [7:0] inData,//USRT side
+output [7:0] outData,
+output uClk
+);
 
 
-//USRT side
-reg [7:0] inData;
-wire [7:0] outData;
-wire uClk;
-reg dir; //dir<=~pWrite
-
+endmodule
