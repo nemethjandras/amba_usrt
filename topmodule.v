@@ -21,21 +21,26 @@
 //==================================================================
 //INPUTS + OUTPUTS
 //==================================================================
-//AMBA side
+
 module topmodule(
+  //AMBA
 input [7:0] pWData,
 input [7:0] pRData,
 input pWrite,
-input pSelect,
+input pSelect,   
 input pEnable,
 input  pClk,
 input pReset,
 input [32:0] pAddress,
 input pReady,
-input [7:0] inData,//USRT side
+input [7:0] inData,
 output [7:0] outData,
-output uClk
+  //USRT
+input Rx,
+output Tx
 );
 
+  
+  
 
 endmodule
