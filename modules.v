@@ -1,3 +1,23 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 04/10/2019 05:49:26 PM
+// Design Name: 
+// Module Name: modules
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 //==================================================================
 //Inputs and outputs for reference
 //==================================================================
@@ -13,8 +33,6 @@ reg pReset;
 reg [32:0] pAddress;
 reg pReady;
 assign pslverr = 0;
-
-
 //USRT
 reg [7:0] inData;
 wire [7:0] outData;
@@ -32,21 +50,26 @@ module enable(
 	input pReady,
 	input pSelect,
 	input pWrite,
+	input pAddr,
+	input pSlverr,
+	input pPprot,
+	input pEnable,
 	output en, //usrt selected >> starts the baudgenerator
 	output rEn, //usrt can send data to amba >> enables the deserializer
 	output wEn //amba sends data to usrt >> enables the serializer
-)
-  
-	reg [2:0] temp; // 0:en, 1:rEn, 2:wEn
-	always (@posedge pClk)
+);
+reg [2:0] temp;
+always @(posedge pClk)
 	begin
 		if(pReset==0) temp=3'b000;
-		if else(pSelect==1)
-			if(pWrite==1) temp<=3'b101;
-			else if(pReady==1 && pEnable==1) temp<=3'b011;
-		else temp<=3'b000;
+		else if(pSelect==1 && pEnable==1)
+	      if(pWrite==1 && pReady==1) 
+	      temp<=3'b101;
+	      else if(pWrite!=1 && pReady==1)
+		  temp<=3'b011;
+	      else 
+	      temp<=3'b000;
 	end
-	
 	assign en=temp[0];
 	assign rEn=temp[1];
 	assign wEn=temp[2];
@@ -60,9 +83,8 @@ module baud_gen(
 	input pClk,
 	input uRst,
 	output uClk
-)
+);
 	reg [6:0] counter;
-	
 	always@(posedge pClk)
 	begin
 		if(uRst)
@@ -79,7 +101,6 @@ endmodule
 recieves a package of 11 bits (1 start, 8 data, 1 parity, 1 stop) 
 -checks parity, unpacks the data
 -deserializes the 8 data bits
-
 incase of incomplete messegas: drops the package
 in case of overrun (unrequested bits): drops the package
 in case of  parity error: drops the package
@@ -90,10 +111,10 @@ module deserializer(
 	input uRst,
 	input en, //basically the pReady&pSelect
 	output [7:0] data
-)
+);
 
 reg [7:0] temp;
-reg [3:0] coutner;
+reg [3:0] counter;
 reg t_flag;
 
 always@(posedge uClk)
@@ -119,9 +140,9 @@ always@(posedge uClk)
 		begin
 		temp<=0; //stop bit check fail
 		counter<=0;
+		end
 		else if(counter==10)
 		t_flag<=0;
-		end
 	end
 	else if(t_flag==1)
 	begin
@@ -143,7 +164,7 @@ module  serializer(
 	input uRst,
 	input en, //basicall the pSelect
 	output Rx
-)
+);
 reg [3:0] counter;
 reg temp;
 reg t_flag;
@@ -193,18 +214,18 @@ module data_reg(
 	input clk,
 	input [7:0] data_in,
 	output[7:0] data_out
-)
+);
 	reg [7:0] temp_in;
 	
 	always@(posedge clk)
 	begin
 		if(rst)
-			temp<=0;
+			temp_in<=0;
 		else if(ready==0)
-			temp<=data_in;
+			temp_in<=data_in;
 	end
 	
-	assign data_out=_in;
+	assign data_out=temp_in;
 	
 endmodule
 
@@ -214,41 +235,15 @@ module shift_reg (
   input rst, 
   input [7:0] data,
   output data_out
-)
+);
   reg [7:0] temp;
   
   always@(posedge clk)
-    begin
+  begin
       if(rst)
-        temp<=data[0];
+        temp<= 0;
       else
-        temp<=temp[0,6:1];
-    end
-  
-  assign data_out=temp[0];
+        temp<={data[0],data[6:1]};
+  end
+  assign data_out=temp;
 endmodule
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
