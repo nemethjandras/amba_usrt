@@ -50,8 +50,7 @@ module enable(
 	input pReady,
 	input pSelect,
 	input pWrite,
-	input pAddr,
-	input pSlverr,
+	input pAddress,
 	input pEnable,
 	output en, //usrt selected >> starts the baudgenerator
 	output rEn, //usrt can send data to amba >> enables the deserializer

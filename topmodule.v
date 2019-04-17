@@ -37,10 +37,19 @@ input [7:0] inData,
 output [7:0] outData,
   //USRT
 input Rx,
+input uRst,
 output Tx
 );
+wire en;
+wire rEn;
+wire wEn;
+enable enable_top(pClk, pReset,pReady, pSelect, pWrite,pAddress,pEnable,en,rEn,wEn);
+wire uClk;
+reg data;
+baud_gen baudgen_top(pClk, uRst,uClk);
+deserializer deserializer_top(Tx, uClk,uRst,en,data);
+serializer serializer_top(inData,uClk,uRst,en,Rx);
+data_reg datareg_top(en,pReset,uClk,data,data);
 
-  
-  
 
 endmodule
