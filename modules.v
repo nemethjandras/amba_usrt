@@ -118,13 +118,14 @@ reg t_flag;
 
 always@(posedge uClk)
 	if(en)	
-	begin 
+	begin
+	counter<=counter+1;
 		if(uRst)
 		begin
 		counter<=0;
 		temp<=0;
-		end
-		if(counter==0)
+		end	counter<=counter+1;
+		else if(counter==0)
 		t_flag<=1;
 		else if(counter==0 && Tx!=1)
 		counter<=0; //startbit check fail
@@ -171,6 +172,7 @@ reg t_flag;
 always @(posedge uClk)
 	if(en)
 	begin
+	counter<=counter+1;
 		if(uRst)
 		begin
 		counter<=0;
