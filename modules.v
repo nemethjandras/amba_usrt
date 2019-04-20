@@ -51,14 +51,13 @@ module enable(
 	input pSelect,
 	input pWrite,
 	input pAddr,
-	input pSlverr,
 	input pEnable,
 	output en, //usrt selected >> starts the baudgenerator
 	output rEn, //usrt can send data to amba >> enables the deserializer
 	output wEn //amba sends data to usrt >> enables the serializer
 );
 reg [2:0] temp;
-always @(posedge pClk)
+always @ (posedge pClk)
 	begin
 		if(pReset==0) temp=3'b000;
 		else if(pSelect==1 && pEnable==1)
@@ -80,13 +79,13 @@ generates 200kHz* clk for the serializer and the deserializer, and the state_reg
 */
 module baud_gen(
 	input pClk,
-	input uRst,
+	input en,
 	output uClk
 );
 	reg [6:0] counter;
 	always@(posedge pClk)
 	begin
-		if(uRst)
+		if(en)
 			counter<=0;
 		else
 			counter<=counter+1;
@@ -107,7 +106,7 @@ in case of  parity error: drops the package
 module deserializer(
 	input Tx,
 	input uClk,
-	input uRst,
+	input rEn,
 	input en, //basically the pReady&pSelect
 	output [7:0] data
 );
@@ -120,37 +119,36 @@ always@(posedge uClk)
 	if(en)	
 	begin
 	counter<=counter+1;
-		if(uRst)
+	if(rEn)
 		begin
 		counter<=0;
 		temp<=0;
-		end	counter<=counter+1;
-		else if(counter==0)
+		end	
+	else if(counter==0)
 		t_flag<=1;
-		else if(counter==0 && Tx!=1)
+	else if(counter==0 && Tx!=1)
 		counter<=0; //startbit check fail
-		else if(counter>0 && counter!=9)
+	else if(counter>0 && counter!=9)
 		temp[counter-1]<=Tx; //data bits
-		else if(counter==9 && Tx!=temp[0]^temp[1]^temp[2]^temp[3]^temp[4]^temp[5]^temp[6]^temp[7])
+	else if(counter==9 && Tx!=temp[0]^temp[1]^temp[2]^temp[3]^temp[4]^temp[5]^temp[6]^temp[7])
 		begin
 		counter<=0; //parity check fail
 		temp<=0;
 		end
-		else if(counter==10 && Tx!=0)
+	else if(counter==10 && Tx!=0)
 		begin
 		temp<=0; //stop bit check fail
 		counter<=0;
 		end
-		else if(counter==10)
+	else if(counter==10)
 		t_flag<=0;
-	end
 	else if(t_flag==1)
 	begin
 		temp<=0;
 		counter<=0;
 		t_flag<=0;
 	end
-	
+end
 	assign data=temp;
 endmodule
 
@@ -161,7 +159,7 @@ recieves the data serializes it, and packages it sends it towards Rx
 module  serializer(
 	input [7:0] data,
 	input uClk,
-	input uRst,
+	input wEn,
 	input en, //basicall the pSelect
 	output Rx
 );
@@ -173,7 +171,7 @@ always @(posedge uClk)
 	if(en)
 	begin
 	counter<=counter+1;
-		if(uRst)
+		if(wEn)
 		begin
 		counter<=0;
 		temp<=0;
@@ -235,11 +233,11 @@ module shift_reg (
   input clk,
   input rst, 
   input [7:0] data,
-  output data_out
+  output[7:0] data_out
 );
   reg [7:0] temp;
   
-  always@(posedge clk)
+  always @(posedge clk)
   begin
       if(rst)
         temp<= 0;
@@ -248,3 +246,4 @@ module shift_reg (
   end
   assign data_out=temp;
 endmodule
+
