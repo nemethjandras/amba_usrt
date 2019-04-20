@@ -39,23 +39,24 @@ output [7:0] outData,
 output Rx,
 input Tx
 );
+  
+  
 wire en;
 wire rEn;
 wire wEn;
-enable enable_top(pClk, pReset,pReady, pSelect, pWrite,pAddress,pEnable,en,rEn,wEn);
 wire uClk;
-wire [7:0] data_in;
-wire [7:0] data_out;
-wire [7:0] to_shift_data_out;
-wire [7:0] to_shift_data_in;
+wire uRst;
+wire [10:0] data_read;
+wire [10:0] data_write;
+
+enable enable_top(pClk, pReset,pReady, pSelect, pWrite,pAddress,pEnable,en,rEn,wEn);
 baud_gen baudgen_top(pClk,en,uClk);
-deserializer deserializer_top(Tx, uClk,rEn,en,data_out);
-data_reg datareg_top_TX(pReady,pReset,uClk,data_out,to_shift_data_in);
-data_reg datareg_top_RX(pReady,pReset,uClk,data_in,to_shift_data_out);
-serializer  serializer_top(pWData,uClk,wEn,en,data_in);
+uRst_gen uRstgen_top(pClk,uClk,pReset,uRst);
+  
+deserializer deserializer_top(Tx,uClk,rEn,uRst,data_read);
+read_reg readreg_top(pClk,pRst,data_read,outData);  
 
-
-
-
-
+serializer serializer_top(data_write,uClk,wEn,uRst,Rx);
+write_reg writereg_top(inData,pRst,pClk,wEn,data_write);
+  
 endmodule
