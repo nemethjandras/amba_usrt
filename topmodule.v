@@ -51,9 +51,7 @@ wire [7:0] to_shift_data_in;
 baud_gen baudgen_top(pClk,en,uClk);
 deserializer deserializer_top(Tx, uClk,rEn,en,data_out);
 data_reg datareg_top_TX(pReady,pReset,uClk,data_out,to_shift_data_in);
-shift_reg shiftreg_top_TX(uClk,pReset,to_shift_data_in,outData);
 data_reg datareg_top_RX(pReady,pReset,uClk,data_in,to_shift_data_out);
-shift_reg shiftreg_top_RX(uClk,pReset,to_shift_data_out,Rx);
 serializer  serializer_top(pWData,uClk,wEn,en,data_in);
 
 

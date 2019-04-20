@@ -75,7 +75,8 @@ endmodule
 
 
 /*
-generates 200kHz* clk for the serializer and the deserializer, and the state_reg (according to the Zilog Z844 model)
+generates 200kHz* clk for the serializer and the deserializer, and the state_reg 
+(according to the Zilog Z844 model)
 */
 module baud_gen(
 	input pClk,
@@ -87,80 +88,136 @@ module baud_gen(
 	begin
 		if(en)
 			counter<=0;
+		else if(counter==79)
+			counter<=0;
 		else
-			counter<=counter+1;
+		    counter<=counter+1;
+		
 	end
 	
 	assign uClk=(counter==79)? 1 : 0;
 	
 endmodule
 
-/*
-recieves a package of 11 bits (1 start, 8 data, 1 parity, 1 stop) 
--checks parity, unpacks the data
--deserializes the 8 data bits
-incase of incomplete messegas: drops the package
-in case of overrun (unrequested bits): drops the package
-in case of  parity error: drops the package
-*/
+//generates uRst from pRst, the USRT modules can only use uRst
+//uRst is the reset signal aligned to uClk s it will only activaty if uClk is active!
+module uRst_gen(
+	input pClk,
+	input uClk,
+	input pRst,
+	output uRst
+)
+	reg reset_flag;
+	reg reset_out;
+	
+	always@(posedge pClk)
+	begin
+	uClk_pe_flag=uClk;
+	if(pRst) reset_flag<=1;
+	end
+	
+	always@(posedge uClk)
+	if(reset_flag)
+		begin
+		reset_flag<=0;
+		reset_out<=0;
+	else reset_out<=0;	
+	
+	assign uRst=reset_out;
+	
+endmodule;
+
+//deserializes a package from the UART and hand it to the read register
+//if the enable is inconsistent during the 11 uCLK period, the whole read process is canceled
 module deserializer(
 	input Tx,
 	input uClk,
 	input rEn,
-	input en, //basically the pReady&pSelect
-	output [7:0] data
+	input uRst,
+	output [10:0] data
 );
 
-reg [7:0] temp;
+reg [10:0] temp;
 reg [3:0] counter;
-reg t_flag;
+reg send_flag;
 
 always@(posedge uClk)
-	if(en)	
 	begin
-	counter<=counter+1;
-	if(rEn)
+		if(uRst || !rEn)
 		begin
-		counter<=0;
-		temp<=0;
-		end	
-	else if(counter==0)
-		t_flag<=1;
-	else if(counter==0 && Tx!=1)
-		counter<=0; //startbit check fail
-	else if(counter>0 && counter!=9)
-		temp[counter-1]<=Tx; //data bits
-	else if(counter==9 && Tx!=temp[0]^temp[1]^temp[2]^temp[3]^temp[4]^temp[5]^temp[6]^temp[7])
-		begin
-		counter<=0; //parity check fail
-		temp<=0;
+			temp<=0;
+			coutner<=0;
+			send_flag<=0;
 		end
-	else if(counter==10 && Tx!=0)
+		else
 		begin
-		temp<=0; //stop bit check fail
-		counter<=0;
+			counter<=counter+1;
+			send flag<=0;
+			temp[counter]<=Tx;
+			if(counter==10)
+			counter<=0;
+			send_flag<=1;
 		end
-	else if(counter==10)
-		t_flag<=0;
-	else if(t_flag==1)
-	begin
-		temp<=0;
-		counter<=0;
-		t_flag<=0;
 	end
-end
-	assign data=temp;
+	assign data=(send_flag)? temp : 0;
 endmodule
 
+//connects the data from the UART to the AMBA if its consistent with USRT protocols rules
+module read_reg(
+	input pClk,
+	input pRst,
+	input [10:0] data_in,
+	output [7:0]data_out
+)
+reg out_en;
+
+always@(posedge pClk)
+	begin
+		if(pRst) out_en=0;
+		if else( data_in[0]==1 && data_in[10]==0 && data_in[9]==data_in[0]^data_in[1]^data_in[2]^data_in[3]^data_in[4]^data_in[5]^data_in[6]^data_in[7])
+		out_en<=1;
+	end
+	
+assign data_out=(out_en)? data_in[1:9] : 8'bzzzzzzzz;
+endmodule
+
+//connects the data from the AMBA to the UART, and encapsulates it according to the USRT protocol
+module write_reg(
+input [7:0] data_in,
+input pRst,
+input pClk,
+input wEn,
+output [10:0] data_out
+)
+
+reg [10:0] temp;
+
+always@(posedge pClk)
+begin
+	if(pRst || !wEn)
+	temp=0;
+	else if(wEn)
+	begin
+		temp[0]<=1;
+		temp[1:8]<=data_in;
+		temp[9]<=data_in[0]^data_in[1]^data_in[2]^data_in[3]^data_in[4]^data_in[5]^data_in[6]^data_in[7];
+		temp[10]<=0;
+	end
+end
+
+assign data_out=temp;
+endmodule
+
+
+
 /*
-recieves the data serializes it, and packages it sends it towards Rx
-(generates parity bit)
+recieves the data serializes it
 */
 module  serializer(
-	input [7:0] data,
+	input [10:0] data,
 	input uClk,
 	input wEn,
-	input en, //basicall the pSelect
+	input uRst,
 	output Rx
 );
 reg [3:0] counter;
@@ -168,82 +225,21 @@ reg temp;
 reg t_flag;
 
 always @(posedge uClk)
-	if(en)
+begin
+	if(uRst || !wEn) 
+	caounter<=0;
+	else
 	begin
-	counter<=counter+1;
-		if(wEn)
-		begin
+		counter<=counter+1;
+		temp<=data_in[counter];
+		if(counter==10)
 		counter<=0;
-		temp<=0;
-		end
-		else if(counter==0)
-		begin
-			temp<=1; //startbit
-			t_flag<=1;
-		end
-		else if(counter>0 && counter!=9)
-		temp<=data[counter-1]; //data bits
-		else if(counter==9)
-		temp<=data[0]^data[1]^data[2]^data[3]^data[4]^data[5]^data[6]^data[7]; //parity bit
-		else if(counter==10)
-		begin
-		temp<=0; //stop bit
-		counter<=0;
-		t_flag<=0;
-		end
-	 end
-	else if(t_flag==1)
-		begin
-		counter<=0;
-		temp<=0;
-		t_flag<=0;
-		end
- 
- assign Rx=temp;
-
-endmodule
-
-/*
-collects and stores 8 bit of data, then sends it out 
-this will be used for both the serializer and the deserializer to achive data consistency
-*/
-module data_reg(
-	input ready, 	//lock the data and send it send the data
-	input rst,	//clears the register + disables sending when active
-	input clk,
-	input [7:0] data_in,
-	output[7:0] data_out
-);
-	reg [7:0] temp_in;
-	
-	always@(posedge clk)
-	begin
-		if(rst)
-			temp_in<=0;
-		else if(ready==0)
-			temp_in<=data_in;
 	end
-	
-	assign data_out=temp_in;
-	
+end
+ 
+ assign Rx=(wEn)? temp : 1'bz;
+
 endmodule
 
-//right shift reg module
-module shift_reg (
-  input clk,
-  input rst, 
-  input [7:0] data,
-  output[7:0] data_out
-);
-  reg [7:0] temp;
-  
-  always @(posedge clk)
-  begin
-      if(rst)
-        temp<= 0;
-      else
-        temp<={data[0],data[6:1]};
-  end
-  assign data_out=temp;
-endmodule
+
 
