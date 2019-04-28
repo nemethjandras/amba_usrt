@@ -24,7 +24,6 @@ module test_topmodule;
 
 //inputs
 reg [7:0] pWData; 
-reg [7:0] pRData;
 reg pWrite;
 reg pSelect;
 reg pEnable;
@@ -36,7 +35,7 @@ reg Tx;
 
 //outputs
 wire Rx;
-
+reg [7:0] pRData;
 //variable for ease of use
 reg uClk_ref;
 
@@ -59,6 +58,41 @@ topmodule uut(
 //1 transfers lasts 13*80 tick in simulation
 task read();
 begin
+#1
+  //pAddress????
+  pWrite=0;
+  pSelect=1;
+#2
+  pEanble=1;
+  pReady=0;
+#82
+  Tx=1;
+#161
+  Tx=0;
+#242
+  Tx=0;
+#322
+  Tx=0;
+#402
+  Tx=1;
+#482
+  Tx=1;
+#562
+  Tx=1;
+#642
+  Tx=0;
+#722
+  Tx=0;
+#802
+  Tx=1;
+#882
+  Tx=0;
+#962
+  pReady=1;
+#963
+  pReady=0;
+  pSelect=0;
+  pEnable=0;
 end
 endtask
 
@@ -67,6 +101,19 @@ endtask
 //1 transfers lasts 13*80 tick in simulation
 task write();
 begin
+   #1
+  //paddr használjuk? 
+  pWrite=1;
+  pSelect=1;
+  pData=8'b11111100;
+  #2
+  pEnable=1;
+  pReady=0;
+  #962
+  pWData=0;
+  pready=1;
+  pEable=0;
+  pSelect=0;
 end
 endtask
 
@@ -80,16 +127,13 @@ pEnable = 0;
 pWrite = 0;
 pAddress = 0;
 pWData = 0;
+pReady=1;
 Tx = 0;
 
 #20
 pReset = 1;
 
-
-
-
-end
-
+//taskok
 
 always #1 pClk = ~pClk;
 always #80 uClk_ref=~uClk_ref;
