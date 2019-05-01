@@ -25,7 +25,7 @@
 module topmodule(
   //AMBA
 input [7:0] pWData,
-input [7:0] pRData,
+output [7:0] pRData,
 input pWrite,
 input pSelect,   
 input pEnable,
