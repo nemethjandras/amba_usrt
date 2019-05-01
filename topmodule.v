@@ -33,8 +33,6 @@ input  pClk,
 input pReset,
 input [32:0] pAddress,
 input pReady,
-input [7:0] inData,
-output [7:0] outData,
   //USRT
 output Rx,
 input Tx

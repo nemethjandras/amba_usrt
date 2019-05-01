@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+//`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -50,7 +50,7 @@ module enable(
 	input pReady,
 	input pSelect,
 	input pWrite,
-	input pAddr,
+	input [32:0] pAddr,
 	input pEnable,
 	output en, //usrt selected >> starts the baudgenerator
 	output rEn, //usrt can send data to amba >> enables the deserializer
@@ -92,7 +92,6 @@ module baud_gen(
 			counter<=0;
 		else
 		    counter<=counter+1;
-		
 	end
 	
 	assign uClk=(counter==79)? 1 : 0;
@@ -106,13 +105,12 @@ module uRst_gen(
 	input uClk,
 	input pRst,
 	output uRst
-)
-	reg reset_flag;
+);
+    reg reset_flag;
 	reg reset_out;
 	
 	always@(posedge pClk)
 	begin
-	uClk_pe_flag=uClk;
 	if(pRst) reset_flag<=1;
 	end
 	
@@ -121,11 +119,12 @@ module uRst_gen(
 		begin
 		reset_flag<=0;
 		reset_out<=0;
+		end
 	else reset_out<=0;	
 	
 	assign uRst=reset_out;
 	
-endmodule;
+endmodule
 
 //deserializes a package from the UART and hand it to the read register
 //if the enable is inconsistent during the 11 uCLK period, the whole read process is canceled
@@ -146,13 +145,13 @@ always@(posedge uClk)
 		if(uRst || !rEn)
 		begin
 			temp<=0;
-			coutner<=0;
+			counter<=0;
 			send_flag<=0;
 		end
 		else
 		begin
 			counter<=counter+1;
-			send flag<=0;
+			send_flag<=0;
 			temp[counter]<=Tx;
 			if(counter==10)
 			counter<=0;
@@ -168,17 +167,17 @@ module read_reg(
 	input pRst,
 	input [10:0] data_in,
 	output [7:0]data_out
-)
+);
 reg out_en;
 
 always@(posedge pClk)
 	begin
 		if(pRst) out_en=0;
-		if else( data_in[0]==1 && data_in[10]==0 && data_in[9]==data_in[0]^data_in[1]^data_in[2]^data_in[3]^data_in[4]^data_in[5]^data_in[6]^data_in[7])
+		else if(data_in[0]==1 && data_in[10]==0 && data_in[9]==data_in[0]^data_in[1]^data_in[2]^data_in[3]^data_in[4]^data_in[5]^data_in[6]^data_in[7])
 		out_en<=1;
 	end
 	
-assign data_out=(out_en)? data_in[1:9] : 8'bzzzzzzzz;
+assign data_out=(out_en)? data_in[9:1] : 8'bzzzzzzzz;
 endmodule
 
 //connects the data from the AMBA to the UART, and encapsulates it according to the USRT protocol
@@ -188,7 +187,7 @@ input pRst,
 input pClk,
 input wEn,
 output [10:0] data_out
-)
+);
 
 reg [10:0] temp;
 
@@ -199,7 +198,7 @@ begin
 	else if(wEn)
 	begin
 		temp[0]<=1;
-		temp[1:8]<=data_in;
+		temp[8:1]<=data_in;
 		temp[9]<=data_in[0]^data_in[1]^data_in[2]^data_in[3]^data_in[4]^data_in[5]^data_in[6]^data_in[7];
 		temp[10]<=0;
 	end
@@ -227,11 +226,11 @@ reg t_flag;
 always @(posedge uClk)
 begin
 	if(uRst || !wEn) 
-	caounter<=0;
+	counter<=0;
 	else
 	begin
 		counter<=counter+1;
-		temp<=data_in[counter];
+		temp<=data[counter];
 		if(counter==10)
 		counter<=0;
 	end
