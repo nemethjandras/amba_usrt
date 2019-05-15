@@ -25,7 +25,7 @@
 module topmodule(
   //AMBA
 input [7:0] pWData,
-input [7:0] pRData,
+output [7:0] pRData,
 input pWrite,
 input pSelect,   
 input pEnable,
@@ -33,8 +33,6 @@ input  pClk,
 input pReset,
 input [32:0] pAddress,
 input pReady,
-input [7:0] inData,
-output [7:0] outData,
   //USRT
 output Rx,
 input Tx
@@ -54,9 +52,9 @@ baud_gen baudgen_top(pClk,en,uClk);
 uRst_gen uRstgen_top(pClk,uClk,pReset,uRst);
   
 deserializer deserializer_top(Tx,uClk,rEn,uRst,data_read);
-read_reg readreg_top(pClk,pRst,data_read,outData);  
+  read_reg readreg_top(pClk,pRst,data_read,pRData);  
 
 serializer serializer_top(data_write,uClk,wEn,uRst,Rx);
-write_reg writereg_top(inData,pRst,pClk,wEn,data_write);
+  write_reg writereg_top(pWData,pRst,pClk,wEn,data_write);
   
 endmodule
