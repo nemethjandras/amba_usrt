@@ -37,8 +37,8 @@ reg Tx;
 wire Rx;
 wire [7:0] pRData;
 //variable for ease of use
-reg uClk_ref;
-reg [7:0] pWData1;
+//reg uClk_ref;
+
 
 //initialize tested module
 topmodule uut(
@@ -57,7 +57,7 @@ topmodule uut(
 
 //read task (usrt <<data<< ambe)
 //1 transfers lasts 13*80 tick in simulation
-task read(input Tx1);
+task read();
 begin
 #1
   //pAddress????
@@ -100,17 +100,17 @@ endtask
 
 //write task (usrt >>data>> amba)
 //1 transfers lasts 13*80 tick in simulation
-task write(input pWData1);
+task write();
 begin
    #1
   //paddr használjuk? 
   pWrite<=1;
   pSelect<=1;
-  pWData<= pWData1;
+  pWData<= 8'b11110000;
   #2
   pEnable<=1;
   pReady<=0;
-  #962
+  #100
   pWData<=0;
   pReady<=1;
   pEnable<=0;
@@ -125,19 +125,29 @@ pClk = 0;
 pReset = 0;
 pSelect = 0;
 pEnable = 0;
-pWrite = 0;
+//pWrite = 0;
 pAddress = 0;
 pWData = 0;
-pReady=1;
+pReady=0;
 Tx = 0;
-#20
+#10
 pReset = 1;
-#100;
-write(0);
+pEnable =1;
+#20
+pSelect =1;
+#30
+pReady =1;
+#100
+write();
+pWrite <=0;
+#200
+pReset=0;
 end
 //taskok
+begin
 always #1 pClk = ~pClk;
-always #80 uClk_ref=~uClk_ref;
+//always #80 uClk_ref=~uClk_ref;
+end
 endmodule
 
 
