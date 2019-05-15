@@ -40,6 +40,7 @@ wire [7:0] pRData;
 reg uClk_ref;
 reg [7:0] pWData1;
 
+
 //initialize tested module
 topmodule uut(
 .pWData(pWData),
@@ -136,6 +137,7 @@ pReset = 1;
 write(0);
 end
 //taskok
+
 always #1 pClk = ~pClk;
 always #80 uClk_ref=~uClk_ref;
 endmodule
